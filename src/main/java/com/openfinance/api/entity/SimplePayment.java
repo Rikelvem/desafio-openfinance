@@ -1,5 +1,6 @@
 package com.openfinance.api.entity;
 
+import com.openfinance.api.enums.PaymentStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,5 +8,10 @@ import lombok.Setter;
 @Setter
 public class SimplePayment extends Payment {
     private String personDocumentNumber;
+
+    @Override
+    public PaymentStatus getDefaultStatus() {
+        return PaymentStatus.ACCEPTED;
+    }
 
 }

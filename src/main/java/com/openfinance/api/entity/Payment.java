@@ -15,4 +15,10 @@ public abstract class Payment {
     private Instant creationDate;
     private String description;
     private PaymentStatus status;
+
+    public abstract PaymentStatus getDefaultStatus();
+
+    public PaymentStatus getStatus() {
+        return status != null ? status : getDefaultStatus();
+    }
 }
