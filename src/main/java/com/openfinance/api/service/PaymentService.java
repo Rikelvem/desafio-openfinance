@@ -1,7 +1,17 @@
 package com.openfinance.api.service;
 
+import com.openfinance.api.dto.request.CreateAutomaticPaymentRequest;
 import com.openfinance.api.dto.request.CreatePaymentRequest;
+import com.openfinance.api.dto.request.CreateSimplePaymentRequest;
+import com.openfinance.api.dto.response.AutomaticPaymentResponse;
 import com.openfinance.api.dto.response.PaymentResponse;
+import com.openfinance.api.dto.response.SimplePaymentResponse;
+import com.openfinance.api.entity.AutomaticPayment;
+import com.openfinance.api.entity.Payment;
+import com.openfinance.api.entity.SimplePayment;
+import com.openfinance.api.enums.PaymentType;
+import com.openfinance.api.repository.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -9,10 +19,34 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
+    private final PaymentRepository paymentRepository;
+
     public PaymentResponse createPayment (CreatePaymentRequest request) {
-        //implementation of payment creation logic
-        return null;
+        Payment payment;
+
+        if (request.getType() == PaymentType.SIMPLE) {
+            CreateSimplePaymentRequest simpleRequest = (CreateSimplePaymentRequest) request;
+            payment = new SimplePayment();
+            ((SimplePayment) payment).setPersonDocumentNumber(simpleRequest.getPersonDocumentNumber());
+        } else {
+            CreateAutomaticPaymentRequest automaticRequest = (CreateAutomaticPaymentRequest) request;
+            payment = new AutomaticPayment();
+            ((AutomaticPayment) payment).setBusinessDocumentNumber(automaticRequest.getBusinessDocumentNumber());
+            ((AutomaticPayment) payment).setScheduleDate(automaticRequest.getScheduleDate());
+        }
+
+        payment.setAmount(request.getAmount());
+        payment.setCreationDate(Instant.now());
+        payment.setDescription(request.getDescription());
+
+        if (request.getStatus() != null) {
+            payment.setStatus(request.getStatus());
+        }
+
+        Payment savedPayment = paymentRepository.save(payment);
+        return convertToResponse(savedPayment);
     }
 
     public PaymentResponse updatePayment (String paymentId, CreatePaymentRequest request) {

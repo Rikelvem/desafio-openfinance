@@ -2,6 +2,7 @@ package com.openfinance.api.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.openfinance.api.enums.PaymentStatus;
 import com.openfinance.api.enums.PaymentType;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,4 +20,5 @@ public abstract class CreatePaymentRequest {
     private PaymentType type;
     private BigDecimal amount;
     private String description;
+    private PaymentStatus status;
 }
