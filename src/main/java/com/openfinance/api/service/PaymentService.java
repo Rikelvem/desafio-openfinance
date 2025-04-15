@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -79,8 +80,9 @@ public class PaymentService {
     }
 
     public PaymentResponse getPayment (String paymentId) {
-        //implementation of getting payment details logic
-        return null;
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException("Pagamento não encontrado com ID: " + paymentId));
+        return convertToResponse(payment);
     }
 
     public List<PaymentResponse> getAllPayments (String type, Instant startDate, Instant endDate) {
@@ -91,8 +93,19 @@ public class PaymentService {
             }
         }
 
-        //implementation of getting all payments logic
-        return null;
+        List<Payment> payments;
+
+        if (type != null && !type.isEmpty()) {
+            payments = paymentRepository.findByType(type);
+        } else if (startDate != null && endDate != null) {
+            payments = paymentRepository.findByDateRange(startDate, endDate);
+        } else {
+            payments = paymentRepository.findAll();
+        }
+
+        return payments.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     private PaymentResponse convertToResponse(Payment payment) {
