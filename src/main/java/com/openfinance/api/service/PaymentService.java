@@ -74,4 +74,31 @@ public class PaymentService {
         //implementation of getting all payments logic
         return null;
     }
+
+    private PaymentResponse convertToResponse(Payment payment) {
+        if (payment instanceof SimplePayment) {
+            SimplePayment simple = (SimplePayment) payment;
+            return SimplePaymentResponse.builder()
+                    .id(simple.getId())
+                    .type(PaymentType.SIMPLE)
+                    .amount(simple.getAmount())
+                    .creationDate(simple.getCreationDate())
+                    .description(simple.getDescription())
+                    .status(simple.getStatus())
+                    .personDocumentNumber(simple.getPersonDocumentNumber())
+                    .build();
+        } else {
+            AutomaticPayment automatic = (AutomaticPayment) payment;
+            return AutomaticPaymentResponse.builder()
+                    .id(automatic.getId())
+                    .type(PaymentType.AUTOMATIC)
+                    .amount(automatic.getAmount())
+                    .creationDate(automatic.getCreationDate())
+                    .description(automatic.getDescription())
+                    .status(automatic.getStatus())
+                    .businessDocumentNumber(automatic.getBusinessDocumentNumber())
+                    .scheduleDate(automatic.getScheduleDate())
+                    .build();
+        }
+    }
 }
