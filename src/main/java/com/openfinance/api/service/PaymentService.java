@@ -10,6 +10,7 @@ import com.openfinance.api.entity.AutomaticPayment;
 import com.openfinance.api.entity.Payment;
 import com.openfinance.api.entity.SimplePayment;
 import com.openfinance.api.enums.PaymentType;
+import com.openfinance.api.exception.PaymentNotFoundException;
 import com.openfinance.api.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,12 +51,31 @@ public class PaymentService {
     }
 
     public PaymentResponse updatePayment (String paymentId, CreatePaymentRequest request) {
-        //implementation of payment update logic
-        return null;
+        Payment existingPayment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException("Pagamento não encontrado com ID: " + paymentId));
+
+        if (request.getType() == PaymentType.SIMPLE && existingPayment instanceof SimplePayment) {
+            CreatePaymentRequest simpleRequest = (CreateSimplePaymentRequest) request;
+            ((SimplePayment) existingPayment).setPersonDocumentNumber(((CreateSimplePaymentRequest) simpleRequest).getPersonDocumentNumber());
+        } else if (request.getType() == PaymentType.AUTOMATIC && existingPayment instanceof AutomaticPayment) {
+            CreatePaymentRequest automaticRequest = (CreateAutomaticPaymentRequest) request;
+            ((AutomaticPayment) existingPayment).setBusinessDocumentNumber(((CreateAutomaticPaymentRequest) automaticRequest).getBusinessDocumentNumber());
+            ((AutomaticPayment) existingPayment).setScheduleDate(((CreateAutomaticPaymentRequest) automaticRequest).getScheduleDate());
+        } else {
+            throw new IllegalArgumentException("Tipo de pagamento incompatível para atualização");
+        }
+
+        existingPayment.setStatus(request.getStatus());
+
+        Payment updatedPayment = paymentRepository.update(existingPayment);
+        return convertToResponse(updatedPayment);
     }
 
     public void deletePayment (String paymentId) {
-        //implementation of payment deletion logic
+        if (!paymentRepository.findById(paymentId).isPresent()) {
+            throw new PaymentNotFoundException("Pagamento não encontrado com ID: " + paymentId);
+        }
+        paymentRepository.deleteById(paymentId);
     }
 
     public PaymentResponse getPayment (String paymentId) {
