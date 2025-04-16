@@ -10,13 +10,14 @@ import com.openfinance.api.entity.AutomaticPayment;
 import com.openfinance.api.entity.Payment;
 import com.openfinance.api.entity.SimplePayment;
 import com.openfinance.api.enums.PaymentType;
+import com.openfinance.api.exception.InvalidDateRangeException;
 import com.openfinance.api.exception.PaymentNotFoundException;
 import com.openfinance.api.repository.PaymentRepository;
+import com.openfinance.api.validator.DateValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PaymentService {
     private final PaymentRepository paymentRepository;
+    private final DateValidator dateValidator;
 
     public PaymentResponse createPayment (CreatePaymentRequest request) {
         Payment payment;
@@ -86,11 +88,11 @@ public class PaymentService {
     }
 
     public List<PaymentResponse> getAllPayments (String type, Instant startDate, Instant endDate) {
-        if (startDate != null && endDate != null) {
-            long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
-            if (daysBetween > 90) {
-                throw new IllegalArgumentException("O intervalo entre as datas não pode ser maior que 90 dias");
+        if (startDate != null || endDate != null) {
+            if (startDate == null || endDate == null) {
+                throw new InvalidDateRangeException("Ambas as datas devem ser fornecidas para filtro por período");
             }
+            dateValidator.validateDateRange(startDate, endDate);
         }
 
         List<Payment> payments;
